@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 st.set_page_config(page_title="Bluesky Disinfo Analyzer", page_icon="🌐", layout="wide")
 
 menu = st.sidebar.radio("Navigation", [
+    "📈 Repost frequency",
     "🔍 Search",
     "📊 Network Analysis",
     "🕵️ Fake Profile Detection",
@@ -21,15 +22,13 @@ menu = st.sidebar.radio("Navigation", [
     "ℹ️ About"])
 
 st.sidebar.markdown("---")
-st.sidebar.info("""
-Bluesky Disinfo Analyzer — a project from the Bellingcat & CLIP Hackathon at Universidad de los Andes (March 2025).
+st.sidebar.info("""Bluesky Disinfo Analyzer — a project from the Bellingcat & CLIP Hackathon at Universidad de los Andes (March 2025).
 
 Investigating hate and disinformation on Bluesky using public data from Brazil.
 
 🔗 GitHub: https://github.com/reichaves/bluesky_analytics
 """)
 
-# ----------- Load external modules -----------
 def load_flag_checker():
     script_path = os.path.join(os.path.dirname(__file__), "01_look_for_flags.py")
     spec = importlib.util.spec_from_file_location("flag_module", script_path)
@@ -44,7 +43,13 @@ def load_hashtag_analyzer():
     spec.loader.exec_module(hashtag_module)
     return hashtag_module
 
-# ----------- Placeholder search functions -----------
+def load_repost_counter():
+    script_path = os.path.join(os.path.dirname(__file__), "03_repost_counter.py")
+    spec = importlib.util.spec_from_file_location("repost_module", script_path)
+    repost_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(repost_module)
+    return repost_module
+
 def search_by_keyword(keyword: str) -> pd.DataFrame:
     return pd.DataFrame({"post": [f"Example post with {keyword}"], "user": ["@example"]})
 
@@ -59,8 +64,39 @@ def detect_fake_profiles(data: pd.DataFrame):
     st.warning("Fake profile detection (placeholder)")
     st.write(data)
 
+# -------- Repost Count Analysis Page --------
+if menu == "📈 Repost frequency":
+    st.title("📈 Repost count distribution")
+    st.markdown("""
+    Analyze repost count frequency from Bluesky post data.
+    """)
+
+    min_reposts = st.slider("Minimum reposts", 0, 100, 0)
+    max_reposts = st.slider("Maximum reposts", 1, 500, 100)
+    top_n = st.slider("Show top N repost counts", 5, 50, 20)
+
+    if st.button("Run Repost Count Analysis"):
+        try:
+            with st.spinner("Counting reposts..."):
+                repost_counter = load_repost_counter()
+                reposts = repost_counter.extract(min_reposts=min_reposts, max_reposts=max_reposts, top_n=top_n)
+
+            df = pd.DataFrame(list(reposts.items()), columns=["Repost Count", "Number of Posts"])
+            total = df["Number of Posts"].sum()
+            df["Percentage"] = df["Number of Posts"] / total * 100
+
+            st.dataframe(df)
+            st.bar_chart(df.set_index("Repost Count")["Number of Posts"])
+
+            csv = df.to_csv(index=False).encode("utf-8")
+            st.download_button("Download CSV", csv, "repost_distribution.csv", "text/csv")
+
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
+
+
 # ----------- Page: Search -----------
-if menu == "🔍 Search":
+elif menu == "🔍 Search":
     st.title("🔍 Search Bluesky data")
     keyword = st.text_input("Enter keyword(s)")
     usernames_input = st.text_area("Enter Bluesky usernames (one per line)")
