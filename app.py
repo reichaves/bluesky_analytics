@@ -90,6 +90,7 @@ if menu == "📈 Repost frequency":
 # --------- Hashtag Trends ----------
 elif menu == "📈 Analyze Hashtag":
     st.title("📈 Analyze Hashtag")
+    st.markdown("Queries the Bluesky public API to search for posts containing a specific hashtag, then extracts and counts all hashtags found within the post metadata (not only the searched one). It supports filtering by frequency")
     hashtag = st.text_input("Enter a hashtag")
     min_count = st.slider("Minimum hashtag count", 1, 100, 5)
     max_count = st.slider("Maximum hashtag count", 10, 500, 100)
@@ -101,13 +102,13 @@ elif menu == "📈 Analyze Hashtag":
             data, top_users = mod.extract(hashtag=hashtag, min_count=min_count, max_count=max_count, top_n=top_n)
             df = pd.DataFrame(list(data.items()), columns=["Hashtag", "Count"])
 
-        # st.write(data)
+        st.markdown(f"### Top hashtags that appear alongside hashtag #{hashtag}")
+
         st.write(alt.Chart(df).mark_bar().encode(
             x=alt.X('Hashtag', sort=None),
             y='Count',
         ))
 
-        st.markdown(f"### Top hashtags that appear alongside hashtag #{hashtag}")
         wc = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(data)
         fig, ax = plt.subplots()
         ax.imshow(wc, interpolation='bilinear')
@@ -124,7 +125,7 @@ elif menu == "📈 Analyze Hashtag":
 # --------- Analyze one post ----------
 elif menu == "🚩 Analyze Post":
     st.title("🚩 Analyze Post")
-    st.markdown("Paste a Bluesky post URL to detect country or region flags in the likers' display names.")
+    st.markdown("This script analyzes a single Bluesky post URL and performs three main tasks - Detects emojis of flags (like 🇧🇷 or 🏴) in the display names of users who liked that post - Builds a table of all user profiles who liked the post - Creates a time series showing how many likes occurred per time interval (minutes, hours, or days).")
     url = st.text_input("Bluesky Post URL")
 
     if st.button("Analyze post"):
@@ -160,7 +161,7 @@ elif menu == "🚩 Analyze Post":
 # --------- Analyze one user ----------
 elif menu == "🧑 Analyze User":
     st.title("🧑 Analyze User")
-    st.markdown("Paste a Bluesky username or profile URL to detect the users who got the most reposts from that profile")
+    st.markdown("Retrieves all recent posts from a specific Bluesky user and analyzes which accounts are most frequently reposted by that user.")
     url = st.text_input("Bluesky username or URL")
 
     if st.button("Analyze user"):
