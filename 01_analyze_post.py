@@ -1,6 +1,9 @@
 import re
 from collections import Counter
+from datetime import datetime
+
 import requests
+import pandas as pd
 
 # Base URL for all Bluesky public API requests
 BASE_URL = "https://public.api.bsky.app/xrpc"
@@ -42,11 +45,38 @@ def get_all_likes_public(uri):
             break
     return all_likes
 
+# def extract(json_records, start_date=None, end_date=None):
+#     # with open("data/all_posts_with_hashtags.json") as file:
+#     #     json_records = json.load(file)
+
+#     likes_by_date = Counter()
+#     skipped = 0
+#     processed = 0
+
+#     for json_data in json_records:
+#         try:
+#             created = json_data.get("record", {}).get("createdAt")
+#             if not created:
+#                 skipped += 1
+#                 continue
+#             dt = datetime.strptime(created[:10], "%Y-%m-%d").date()
+#             like_count = json_data.get("like_count", 0)
+
+#             if (start_date is None or dt >= start_date) and (end_date is None or dt <= end_date):
+#                 likes_by_date[dt] += like_count
+#                 processed += 1
+#         except Exception as error:
+#             print("Error parsing entry:", error)
+#             print(json_data)
+
+
+#     return dict(sorted(likes_by_date.items())), processed, skipped
+
 # Main function to run flag detection logic
 # Returns:
 # - A Counter of all flags found in display names
 # - A list of user profile data with flags found
-def run(url):
+def run(url, start_date=None, end_date=None):
     uri = url_to_uri(url=url)
     likes = get_all_likes_public(uri)
 
@@ -72,12 +102,24 @@ def run(url):
             "flags": ", ".join(flags_found) if flags_found else "—"
         })
 
-    return Counter(all_flags), profiles
+    # data, processed, skipped = extract(json_records=likes, start_date=start_date, end_date=end_date)
+    df = pd.DataFrame([{"name": like.get("actor", {}).get("displayName"), "createdAt": like["createdAt"]} for like in likes])
+    df["createdAt"] = pd.to_datetime(df["createdAt"])
+    time_range = df["createdAt"].max() - df["createdAt"].min()
+    if time_range > pd.Timedelta(days = 5):
+        freq = "D"
+    elif time_range > pd.Timedelta(hours = 5):
+        freq = "h"
+    else:
+        freq = "min"
+    group = df.groupby(pd.Grouper(freq = freq, key = "createdAt")).agg("count")
+
+    return Counter(all_flags), profiles, group
 
 # Optional CLI usage for testing the script standalone
 def main():
     post_url = input("Enter Bluesky post URL: ")
-    flag_count, profile_data = run(post_url)
+    flag_count, profile_data, data, processe, skipped = run(post_url)
     print("Flag count:", flag_count)
     print("Profiles:", profile_data)
 

@@ -9,14 +9,25 @@ import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Bluesky Disinfo Analyzer", page_icon="🌐", layout="wide")
 
+# menu = st.sidebar.radio("Navigation", [
+#     "📈 Repost frequency",
+#     "📅 Likes per day",
+#     "📅 Analyze hashtag trends",
+#     "🚩 Search for flags in profiles on Bluesky",
+#     "🔍 Search",
+#     "📊 Network Analysis",
+#     "🕵️ Fake Profile Detection",
+#     "📘 Instructions",
+#     "ℹ️ About"])
+
 menu = st.sidebar.radio("Navigation", [
-    "📈 Repost frequency",
-    "📅 Likes per day",
-    "📅 Analyze hashtag trends",
-    "🚩 Search for flags in profiles on Bluesky",
-    "🔍 Search",
-    "📊 Network Analysis",
-    "🕵️ Fake Profile Detection",
+    "📈 Analyze Hashtag",
+    "🚩 Analyze Post",
+    "📅 Analyze User",
+    # "🚩 Search for flags in profiles on Bluesky",
+    # "🔍 Search",
+    # "📊 Network Analysis",
+    # "🕵️ Fake Profile Detection",
     "📘 Instructions",
     "ℹ️ About"])
 
@@ -28,16 +39,23 @@ Investigating hate and disinformation on Bluesky using public data from Brazil.
 🔗 GitHub: https://github.com/reichaves/bluesky_analytics""")
 
 # --------- Loaders ----------
-def load_flag_checker():
-    path = os.path.join(os.path.dirname(__file__), "01_look_for_flags.py")
-    spec = importlib.util.spec_from_file_location("flag_module", path)
+def load_post_module():
+    path = os.path.join(os.path.dirname(__file__), "01_analyze_post.py")
+    spec = importlib.util.spec_from_file_location("post_module", path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
 
-def load_hashtag_analyzer():
-    path = os.path.join(os.path.dirname(__file__), "02_hashtags.py")
+def load_hashtag_module():
+    path = os.path.join(os.path.dirname(__file__), "02_analyze_hashtag.py")
     spec = importlib.util.spec_from_file_location("hashtag_module", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+def load_user_module():
+    path = os.path.join(os.path.dirname(__file__), "04_analyze_user.py")
+    spec = importlib.util.spec_from_file_location("user_module", path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
@@ -49,35 +67,8 @@ def load_repost_counter():
     spec.loader.exec_module(mod)
     return mod
 
-def load_likes_by_dates():
-    path = os.path.join(os.path.dirname(__file__), "04_number_likes_by_dates.py")
-    spec = importlib.util.spec_from_file_location("likes_module", path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-# --------- Likes per Day ----------
-if menu == "📅 Likes per day":
-    st.title("📅 Likes per day")
-    st.markdown("📂 Source: `data/all_posts_with_hashtags.json`")
-
-    if st.button("Run Likes Analysis"):
-        with st.spinner("Processing..."):
-            mod = load_likes_by_dates()
-            data, processed, skipped = mod.extract()
-
-        df = pd.DataFrame(list(data.items()), columns=["Date", "Total Likes"])
-        df["Date"] = pd.to_datetime(df["Date"])
-        df = df.sort_values("Date")
-
-        st.line_chart(df.set_index("Date"))
-        st.dataframe(df)
-        st.success(f"Processed: {processed} — Skipped: {skipped}")
-
-        st.download_button("Download CSV", df.to_csv(index=False).encode(), "likes_by_day.csv", "text/csv")
-
 # --------- Repost Frequency ----------
-elif menu == "📈 Repost frequency":
+if menu == "📈 Repost frequency":
     st.title("📈 Repost count distribution")
     st.markdown("📂 Source: `data/all_posts_with_hashtags.json`")
     min_reposts = st.slider("Minimum reposts", 0, 100, 0)
@@ -94,18 +85,18 @@ elif menu == "📈 Repost frequency":
         st.download_button("Download CSV", df.to_csv(index=False).encode(), "reposts.csv")
 
 # --------- Hashtag Trends ----------
-elif menu == "📅 Analyze hashtag trends":
-    st.title("📅 Analyze hashtag trends")
-    st.markdown("📂 Source: `data/all_posts_with_hashtags.json`")
-    hashtag = st.text_input("Search for hashtag")
+elif menu == "📈 Analyze Hashtag":
+    st.title("📈 Analyze Hashtag")
+    hashtag = st.text_input("Enter a hashtag")
     min_count = st.slider("Minimum hashtag count", 1, 100, 5)
     max_count = st.slider("Maximum hashtag count", 10, 500, 100)
     top_n = st.slider("Top N hashtags", 10, 100, 30)
 
     if st.button("Run Hashtag Analysis"):
-        mod = load_hashtag_analyzer()
-        data = mod.extract(hashtag=hashtag, min_count=min_count, max_count=max_count, top_n=top_n)
-        df = pd.DataFrame(list(data.items()), columns=["Hashtag", "Count"])
+        with st.spinner("Processing..."):
+            mod = load_hashtag_module()
+            data = mod.extract(hashtag=hashtag, min_count=min_count, max_count=max_count, top_n=top_n)
+            df = pd.DataFrame(list(data.items()), columns=["Hashtag", "Count"])
         st.dataframe(df)
         st.bar_chart(df.set_index("Hashtag"))
         wc = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(data)
@@ -114,21 +105,38 @@ elif menu == "📅 Analyze hashtag trends":
         ax.axis('off')
         st.pyplot(fig)
 
-# --------- Flag Checker ----------
-elif menu == "🚩 Search for flags in profiles on Bluesky":
-    st.title("🚩 Search for flags in profiles on Bluesky")
+# --------- Analyze one post ----------
+elif menu == "🚩 Analyze Post":
+    st.title("🚩 Analyze Post")
     st.markdown("Paste a Bluesky post URL to detect country or region flags in the likers' display names.")
     url = st.text_input("Bluesky Post URL")
 
-    if st.button("Check for flags"):
-        mod = load_flag_checker()
-        flags, profiles = mod.run(url=url)
-        st.markdown("### Flag summary")
+    if st.button("Analyze post"):
+        with st.spinner("Processing..."):
+          mod = load_post_module()
+          flags, profiles, group = mod.run(url=url)
+        st.markdown("### Flags in names of accounts that liked post")
         for flag, count in flags.most_common():
             st.write(f"{flag}: {count}")
-        if profiles:
-            st.markdown("### User details from likes")
-            st.dataframe(pd.DataFrame(profiles))
+
+        st.line_chart(group)
+        st.dataframe(group)
+
+
+# --------- Analyze one user ----------
+elif menu == "📅 Analyze User":
+    st.title("📅 Analyze User")
+    st.markdown("Paste a Bluesky post URL to detect country or region flags in the likers' display names.")
+    url = st.text_input("Bluesky username or URL")
+
+    if st.button("Analyze user"):
+        with st.spinner("Processing..."):
+          mod = load_user_module()
+          most_reposted = mod.run(handle=url)
+        st.markdown("### Most reposted users")
+        for user, count in most_reposted.items():
+            st.write(f"{user}: {count}")
+
 
 # --------- Placeholders ----------
 elif menu == "🔍 Search":
