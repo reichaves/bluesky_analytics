@@ -89,6 +89,7 @@ if menu == "📈 Repost frequency":
 # --------- Hashtag Trends ----------
 elif menu == "📈 Analyze Hashtag":
     st.title("📈 Analyze Hashtag")
+    st.markdown("Queries the Bluesky public API to search for posts containing a specific hashtag, then extracts and counts all hashtags found within the post metadata (not only the searched one). It supports filtering by frequency")
     hashtag = st.text_input("Enter a hashtag")
     min_count = st.slider("Minimum hashtag count", 1, 100, 5)
     max_count = st.slider("Maximum hashtag count", 10, 500, 100)
