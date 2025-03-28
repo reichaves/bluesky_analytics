@@ -132,7 +132,7 @@ elif menu == "🚩 Analyze Post":
 # --------- Analyze one user ----------
 elif menu == "📅 Analyze User":
     st.title("📅 Analyze User")
-    st.markdown("Paste a Bluesky post URL to detect country or region flags in the likers' display names.")
+    st.markdown("retrieves all recent posts from a specific Bluesky user and analyzes which accounts are most frequently reposted by that user.")
     url = st.text_input("Bluesky username or URL")
 
     if st.button("Analyze user"):
