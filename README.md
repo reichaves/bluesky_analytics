@@ -2,6 +2,8 @@
 
 This is an open-source investigative dashboard developed for the **Bellingcat & CLIP Hackathon at Universidad de los Andes** (March 2025). The project focuses on monitoring, analyzing, and uncovering disinformation and hate speech campaigns on the Bluesky social network, with a focus on Brazil.
 
+###But it can be adapted to other countries, contexts and research - and the analysis methodology can also be used for other social networks
+
 ## 🌐 Live App
 
 You can try the dashboard at:  
