@@ -97,13 +97,14 @@ elif menu == "📈 Repost frequency":
 elif menu == "📅 Analyze hashtag trends":
     st.title("📅 Analyze hashtag trends")
     st.markdown("📂 Source: `data/all_posts_with_hashtags.json`")
+    hashtag = st.text_input("Search for hashtag")
     min_count = st.slider("Minimum hashtag count", 1, 100, 5)
     max_count = st.slider("Maximum hashtag count", 10, 500, 100)
     top_n = st.slider("Top N hashtags", 10, 100, 30)
 
     if st.button("Run Hashtag Analysis"):
         mod = load_hashtag_analyzer()
-        data = mod.extract(min_count=min_count, max_count=max_count, top_n=top_n)
+        data = mod.extract(hashtag=hashtag, min_count=min_count, max_count=max_count, top_n=top_n)
         df = pd.DataFrame(list(data.items()), columns=["Hashtag", "Count"])
         st.dataframe(df)
         st.bar_chart(df.set_index("Hashtag"))

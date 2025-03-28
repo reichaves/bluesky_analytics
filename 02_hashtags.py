@@ -1,13 +1,48 @@
 import json
 from collections import Counter
 
+import requests
+
+BASE_URL = "https://public.api.bsky.app/xrpc"
+DATA_LIMIT = 2000
+
+def search_hashtags(hashtag):
+    """Behavior may be unreliable in future: https://github.com/bluesky-social/atproto/issues/3583#issuecomment-2704441168"""
+    all_posts = []
+    cursor = None
+    if not hashtag.startswith("#"):
+        hashtag = "#" + hashtag
+    parameters = {
+        "q": hashtag,
+        "limit": 100
+    }
+    url = f"{BASE_URL}/app.bsky.feed.searchposts"
+    all_posts = []
+    while True:
+        if len(all_posts) > DATA_LIMIT:
+            break
+        if cursor:
+            parameters.update({"cursor": cursor})
+        r = requests.get(url, params = parameters)
+        if not r.ok:
+            raise ConnectionError
+        data = r.json()
+        all_posts.extend(data["posts"])
+        cursor = data.get("cursor")
+        if cursor:
+            continue
+        else:
+            break
+
+    return all_posts
+
 # This function loads a local JSON file of Bluesky posts
 # and extracts hashtags from the 'facets' field of each post.
 # It returns a dictionary with hashtag frequencies (sorted descending),
 # with optional filters for minimum count, maximum count, and top N hashtags.
-def extract(min_count=1, max_count=None, top_n=None):
-    with open('data/all_posts_with_hashtags.json') as file:
-        json_records = json.load(file)
+def extract(hashtag, min_count=1, max_count=None, top_n=None):
+
+    json_records = search_hashtags(hashtag=hashtag)
 
     hashtags = []
 
