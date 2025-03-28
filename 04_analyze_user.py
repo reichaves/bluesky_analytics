@@ -58,14 +58,31 @@ def extract(json_records):
         if 'embed' in post['record'] and post['record']['embed']['$type'] == 'app.bsky.embed.record':
 
             if 'author' in post['embed']['record']:
+                if "handle" not in post['embed']['record']['author'].keys():
+                    continue
                 output.append(post['embed']['record']['author']['handle'])
 
     most_reposted_by_user = Counter(output)
     return dict(sorted(most_reposted_by_user.items(), key=lambda item: item[1], reverse=True))
 
+def extract_most_replied_to(json_records):
+
+    output = []
+
+    for json_data in json_records:
+        post = json_data['post']
+
+        if 'reply' in json_data:
+            output.append(post['author']['handle'])
+
+    total_replies_by_user = Counter(output)
+    sorted_total_replies_by_user = dict(sorted(total_replies_by_user.items(), key=lambda item: item[1], reverse=True))
+
+    return sorted_total_replies_by_user
+
 def run(handle):
     posts = get_user_posts(handle = handle)
-    return extract(json_records=posts)
+    return extract(json_records=posts), extract_most_replied_to(json_records=posts)
 
 if __name__ == "__main__":
     handle = "tristanl.ee"

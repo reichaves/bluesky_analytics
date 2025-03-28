@@ -75,7 +75,9 @@ def extract(hashtag, min_count=1, max_count=None, top_n=None):
     if top_n:
         sorted_filtered = dict(list(sorted_filtered.items())[:top_n])
 
-    return sorted_filtered
+    top_users = Counter([(post["author"]["handle"], post["author"]["displayName"]) for post in json_records]).most_common()[:10]
+
+    return sorted_filtered, top_users
 
 # Run standalone for debugging
 if __name__ == '__main__':

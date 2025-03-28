@@ -6,6 +6,7 @@ import importlib.util
 from datetime import datetime
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
+import altair as alt
 
 st.set_page_config(page_title="Bluesky Disinfo Analyzer", page_icon="🌐", layout="wide")
 
@@ -23,7 +24,7 @@ st.set_page_config(page_title="Bluesky Disinfo Analyzer", page_icon="🌐", layo
 menu = st.sidebar.radio("Navigation", [
     "📈 Analyze Hashtag",
     "🚩 Analyze Post",
-    "📅 Analyze User",
+    "🧑 Analyze User",
     # "🚩 Search for flags in profiles on Bluesky",
     # "🔍 Search",
     # "📊 Network Analysis",
@@ -97,15 +98,28 @@ elif menu == "📈 Analyze Hashtag":
     if st.button("Run Hashtag Analysis"):
         with st.spinner("Processing..."):
             mod = load_hashtag_module()
-            data = mod.extract(hashtag=hashtag, min_count=min_count, max_count=max_count, top_n=top_n)
+            data, top_users = mod.extract(hashtag=hashtag, min_count=min_count, max_count=max_count, top_n=top_n)
             df = pd.DataFrame(list(data.items()), columns=["Hashtag", "Count"])
-        st.dataframe(df)
-        st.bar_chart(df.set_index("Hashtag"))
+
+        # st.write(data)
+        st.write(alt.Chart(df).mark_bar().encode(
+            x=alt.X('Hashtag', sort=None),
+            y='Count',
+        ))
+
+        st.markdown(f"### Top hashtags that appear alongside hashtag #{hashtag}")
         wc = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(data)
         fig, ax = plt.subplots()
         ax.imshow(wc, interpolation='bilinear')
         ax.axis('off')
         st.pyplot(fig)
+
+        st.markdown(f"### Top users posting with hashtag #{hashtag}")
+        for (username, display_name), count in top_users:
+            st.write(f"[{display_name}](https://bsky.app/profile/{username}) : {count} posts")
+
+        # st.markdown("### Data")
+        # st.dataframe(df)
 
 # --------- Analyze one post ----------
 elif menu == "🚩 Analyze Post":
@@ -125,24 +139,43 @@ elif menu == "🚩 Analyze Post":
             st.write(f"{flag}: {count}")
 
         st.markdown("### Likes over time")
-        st.altair_chart(group)
+
+        # _group = pd.DataFrame()
+        # _group["Time"] = group.index
+        # _group["Likes"] = group["Likes"]
+
+        # import pdb; pdb.set_trace()
+
+        # st.write(alt.Chart(_group).mark_line().encode(
+        #     x=alt.X('Time'),
+        #     y='Likes',
+        # ))
+
+        st.line_chart(group)
+
         # import pdb; pdb.set_trace()
         # st.dataframe(group)
 
 
 # --------- Analyze one user ----------
-elif menu == "📅 Analyze User":
-    st.title("📅 Analyze User")
-    st.markdown("Paste a Bluesky post URL to detect country or region flags in the likers' display names.")
+elif menu == "🧑 Analyze User":
+    st.title("🧑 Analyze User")
+    st.markdown("Paste a Bluesky username or profile URL to detect the users who got the most reposts from that profile")
     url = st.text_input("Bluesky username or URL")
 
     if st.button("Analyze user"):
         with st.spinner("Processing..."):
           mod = load_user_module()
-          most_reposted = mod.run(handle=url)
+          most_reposted, most_replied = mod.run(handle=url)
         st.markdown("### Most reposted users")
-        for user, count in most_reposted.items():
-            st.write(f"{user}: {count}")
+        for user, count in list(most_reposted.items())[:10]:
+            # st.write(f"{user}: {count}")
+            st.write(f"[{user}](https://bsky.app/profile/{user}) : {count} reposts")
+
+        st.markdown("### Most replied-to users")
+        for user, count in list(most_replied.items())[:10]:
+            # st.write(f"{user}: {count}")
+            st.write(f"[{user}](https://bsky.app/profile/{user}) : {count} reposts")
 
 
 # --------- Placeholders ----------
