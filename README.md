@@ -1,8 +1,10 @@
 # Bluesky Disinfo Analyzer
 
-This is an open-source investigative dashboard developed for the **Bellingcat & CLIP Hackathon at Universidad de los Andes** (March 2025). The project focuses on monitoring, analyzing, and uncovering disinformation and hate speech campaigns on the Bluesky social network, with a focus on Brazil.
+This is an open-source investigative dashboard developed for the **Bellingcat & CLIP Hackathon at Universidad de los Andes** (March 2025).
 
-### But it can be adapted to other countries, contexts and research - and the analysis methodology can also be used for other social networks
+**But it can be adapted to other countries, contexts and research - and the analysis methodology can also be used for other social networks**.
+
+The project focuses on monitoring, analyzing, and uncovering disinformation and hate speech campaigns on the Bluesky social network, with a focus on Brazil.
 
 ## 🌐 Live App
 
@@ -77,6 +79,118 @@ https://blueskyanalytics.streamlit.app/
 - Replace remaining static scripts with real-time API queries
 - Improve visualizations with dynamic graph/network libraries
 - Add search by username and richer metadata visualizations
+
+## 🧵 Common hashtags and keywords used in disinformation or hate campaigns in Brazil (2025)
+
+```
+#FraudeNasUrnas
+#VotoImpressoJá
+#STFCensurador
+#CPIdaFarsa
+#VacinaMatando
+#CovidFraude
+#TratamentoPrecoce
+#Globalismo
+#NovaOrdemMundial
+#Agenda2030
+#MarxismoCultural
+#DitaduraGay
+#IdeologiaDeGênero
+#VacinaChinesaNão
+#GloboLixo
+#FolhaPutinhaDoPT
+#STFLixo
+#CongressoCorrupto
+#MídiaComprada
+#ImprensaGolpista
+#CensuraNoBrasil
+#Esquerdopata
+#Petralha
+#ComunistaSafado
+#Feminazi
+#Lacração
+#MilitanteChato
+#Cancelamento
+#FakeNews
+#ImpeachmentFake
+#LiberdadeDeExpressao
+#CensuraNuncaMais
+folhalixo
+estadãolixo
+forapt
+foraalexandredemoraes
+canetadesmanipuladora
+fakenews
+esquerdanuncamais
+esquerdalixo
+globolixotraidoradapátria
+forafláviodino
+nãoaototalitarismo
+nãoaofeminismo
+nãoaocomunismo
+voltaporcima
+foralula
+fantásticolixo
+vejalixo
+corrupçãosemfim
+cegueiraeleitoral
+lulaladrão
+canalmeiolixo
+globomente
+foraladrao
+liberdademasculina
+impeachmentdelulajá
+bolsonaro2026
+efeitolula
+governolula
+recordlixo
+globosta
+mídiapodre
+trump
+censura
+liberdadefinanceira
+donaldtrump
+direita
+ditadura
+globalism
+stf
+woke
+bolsonaro
+conservador
+globalistica
+comunismo
+janja
+esquerdistas
+esquerdoloides
+jumentodolula
+jumentinhodolula
+bolsominion
+redpill
+bluepill
+fuckmarxism
+liberdadedeexpressão
+pablomarçal
+xandao
+censuranão
+recontagem
+stopthecount
+globalistico
+novaordem
+illuminatti
+ordeminternacional
+controledasmassas
+iluminati
+votoimpresso
+tselixo
+xandaonacadeia
+direitaunida
+ptnuncamais
+direitaseguedireita
+womad
+esquerdista
+pix
+culturawoke
+```
 
 ## 📄 License
 
