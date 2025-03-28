@@ -110,7 +110,7 @@ elif menu == "📈 Analyze Hashtag":
 # --------- Analyze one post ----------
 elif menu == "🚩 Analyze Post":
     st.title("🚩 Analyze Post")
-    st.markdown("Paste a Bluesky post URL to detect country or region flags in the likers' display names.")
+    st.markdown("This script analyzes a single Bluesky post URL and performs three main tasks - Detects emojis of flags (like 🇧🇷 or 🏴) in the display names of users who liked that post - Builds a table of all user profiles who liked the post - Creates a time series showing how many likes occurred per time interval (minutes, hours, or days).")
     url = st.text_input("Bluesky Post URL")
 
     if st.button("Analyze post"):
