@@ -21,7 +21,13 @@ menu = st.sidebar.radio("Navigation", [
     "ℹ️ About"])
 
 st.sidebar.markdown("---")
-st.sidebar.info("Bluesky Disinfo Analyzer — a project from the Bellingcat & CLIP Hackathon at Universidad de los Andes (March 2025).
+st.sidebar.info("""
+Bluesky Disinfo Analyzer — a project from the Bellingcat & CLIP Hackathon at Universidad de los Andes (March 2025).
+
+Investigating hate and disinformation on Bluesky using public data from Brazil.
+
+🔗 GitHub: https://github.com/reichaves/bluesky_analytics
+""").
 
 Investigating hate and disinformation on Bluesky using public data from Brazil.
 
