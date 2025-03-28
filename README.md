@@ -1,94 +1,81 @@
 # Bluesky Disinfo Analyzer
 
-**Project for the Bellingcat and CLIP Hackathon at Universidad de los Andes – March 2025**  
-[Live app here](https://blueskyanalytics.streamlit.app/)
+This is an open-source investigative dashboard developed for the **Bellingcat & CLIP Hackathon at Universidad de los Andes** (March 2025). The project focuses on monitoring, analyzing, and uncovering disinformation and hate speech campaigns on the Bluesky social network, with a focus on Brazil.
 
-## 📝 Description
+## 🌐 Live App
 
-This project explores techniques for analyzing public content from the decentralized social network **Bluesky**, focusing on **disinformation** and **hate speech** in Brazil. The project was developed during the **Bellingcat and CLIP Hackathon at Universidad de los Andes** in March 2025.
+You can try the dashboard at:  
+https://blueskyanalytics.streamlit.app/
 
-It is an open-source tool to help journalists and researchers detect suspicious behaviors, coordinated activity, and identity patterns from posts and user profiles on Bluesky.
+## 🎯 Objectives
 
-## 🧪 What the app can do (current functionalities)
+- Detect and visualize digital disinformation trends.
+- Identify inauthentic behavior and organized campaigns.
+- Monitor flagged content, hashtags, and reposting patterns.
+- Provide journalists and researchers with tools to explore data from Bluesky.
 
-The app uses public Bluesky data (fetched or preprocessed) and offers several modules:
+## 🚀 Features
 
-### 🔍 Search (placeholder)
-- Simulates search by keyword or username.
-- Not yet connected to real database.
+| Functionality | Description | Script |
+|---------------|-------------|--------|
+| 🚩 **Flag detector** | Finds country or regional flag emojis in profile names of users who liked a specific post. Uses real-time API queries based on a Bluesky URL. | `01_look_for_flags.py` |
+| 📅 **Hashtag analysis** | Searches for hashtags using the Bluesky API and extracts trending terms from post metadata. Includes bar chart and word cloud. | `02_hashtags.py` |
+| 📈 **Repost distribution** | Calculates how many times posts were reposted. (Currently uses a static JSON; will be updated to fetch from API.) | `03_repost_counter.py` |
+| 📅 **Likes by date** | Analyzes the total number of likes per day. (Static JSON for now.) | `04_number_likes_by_dates.py` |
+| 🔁 **Most reposted accounts** | Detects which accounts are most commonly reposted. | `05_most_reposted_by_user.py` |
+| ✍️ **Users with most posts** | Identifies the most prolific accounts (excluding replies). | `06_users_with_most_posts.py` |
 
-### 📊 Network Analysis (placeholder)
-- Placeholder for future graph-based interaction analysis.
+## 🧠 Data sources
 
-### 🕵️ Fake Profile Detection (placeholder)
-- Placeholder for detecting inauthentic behavior.
+- [Bluesky Public API](https://docs.bsky.app/docs/api)
+- Queries are made using `requests` directly from the app
 
-### 🚩 Search for flags in profiles on Bluesky  
-**Script**: [`01_look_for_flags.py`](01_look_for_flags.py)  
-- Given a Bluesky post URL, fetches all users who liked the post.
-- Detects **flag emojis** in user `displayName`s.
-- Displays a count of detected flags and a table of users who used them.
-
-### 📅 Analyze hashtag trends  
-**Script**: [`02_hashtags.py`](02_hashtags.py)  
-- Loads a local JSON dataset of posts with hashtags.
-- Filters hashtags by frequency (`min_count`, `max_count`, `top_n`).
-- Displays results as a table, bar chart, and **word cloud**.
-
-## 🚀 How to run locally
+## 📦 Installation
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/bluesky-disinfo-analyzer.git
-   cd bluesky-disinfo-analyzer
+   git clone https://github.com/reichaves/bluesky_analytics.git
+   cd bluesky_analytics
    ```
 
-2. Create a virtual environment and install dependencies:
+2. Install dependencies:
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # or venv\Scripts\activate on Windows
    pip install -r requirements.txt
    ```
 
-3. Place your Bluesky JSON dataset inside `data/` as `all_posts_with_hashtags.json`.
-
-4. Run the app:
+3. Run the app:
    ```bash
    streamlit run app.py
    ```
 
-## 📂 Files
+## 📁 Folder structure
 
-- `app.py`: Main Streamlit application
-- `01_look_for_flags.py`: Extracts flag emojis from likers of a Bluesky post
-- `02_hashtags.py`: Analyzes hashtags from local JSON data
-- `requirements.txt`: Python dependencies
-
-## 📎 Dataset
-
-For testing, create a directory `data/` and place a file named `all_posts_with_hashtags.json` containing Bluesky post records with `facets`.
-
-Example JSON structure (simplified):
-
-```json
-[
-  {
-    "record": {
-      "created_at": "2025-03-25T16:00:00Z",
-      "facets": [
-        { "features": [{ "tag": "FakeNews" }] }
-      ]
-    },
-    "author": {
-      "handle": "@user.bsky.social"
-    }
-  }
-]
+```
+.
+├── app.py                   # Main Streamlit app
+├── requirements.txt         # Python dependencies
+├── data/                    # Local data files (temporary; to be replaced by dynamic API)
+├── 01_look_for_flags.py
+├── 02_hashtags.py
+├── 03_repost_counter.py
+├── 04_number_likes_by_dates.py
+├── 05_most_reposted_by_user.py
+├── 06_users_with_most_posts.py
 ```
 
-## 🧑‍💻 Team
+## 👥 Authors
 
-Developed by participants of the **Bellingcat & CLIP Hackathon**  
-Hosted by Universidad de los Andes, March 2025
+- **Armando Mora** (Costa Rica)  
+- **José Luis Peñarredonda** (Colombia)  
+- **Tristan Lee** (United States)  
+- **Reinaldo Chaves** (Brazil)
 
-> Part of an open exploration on how to investigate disinformation and hate speech using decentralized social platforms like Bluesky.
+## 🛠 Next steps
+
+- Replace remaining static scripts with real-time API queries
+- Improve visualizations with dynamic graph/network libraries
+- Add search by username and richer metadata visualizations
+
+## 📄 License
+
+This project is shared under the MIT License.
