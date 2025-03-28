@@ -111,16 +111,16 @@ def run(url, start_date=None, end_date=None):
         })
 
     # data, processed, skipped = extract(json_records=likes, start_date=start_date, end_date=end_date)
-    df = pd.DataFrame([{"name": like.get("actor", {}).get("displayName"), "createdAt": like["createdAt"]} for like in likes])
-    df["createdAt"] = pd.to_datetime(df["createdAt"])
-    time_range = df["createdAt"].max() - df["createdAt"].min()
+    df = pd.DataFrame([{"Likes": like.get("actor", {}).get("displayName"), "Time": like["createdAt"]} for like in likes])
+    df["Time"] = pd.to_datetime(df["Time"])
+    time_range = df["Time"].max() - df["Time"].min()
     if time_range > pd.Timedelta(days = 5):
         freq = "D"
     elif time_range > pd.Timedelta(hours = 5):
         freq = "h"
     else:
         freq = "min"
-    group = df.groupby(pd.Grouper(freq = freq, key = "createdAt")).agg("count")
+    group = df.groupby(pd.Grouper(freq = freq, key = "Time")).agg("count")
 
     return Counter(all_flags), profiles, group, embed_html
 

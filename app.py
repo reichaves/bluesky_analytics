@@ -125,7 +125,8 @@ elif menu == "🚩 Analyze Post":
             st.write(f"{flag}: {count}")
 
         st.markdown("### Likes over time")
-        st.line_chart(group)
+        st.altair_chart(group)
+        # import pdb; pdb.set_trace()
         # st.dataframe(group)
 
 

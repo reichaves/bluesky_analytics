@@ -18,6 +18,9 @@ def get_user_posts(handle):
         handle = handle.strip("/").split("/")[-1]
     if handle.startswith("@"):
         handle = handle[1:]
+    if "." not in handle:
+        handle = handle + ".bsky.social"
+
     did = handle_to_did(handle = handle)
     all_posts = []
     cursor = None
