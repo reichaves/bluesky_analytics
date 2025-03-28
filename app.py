@@ -21,7 +21,11 @@ menu = st.sidebar.radio("Navigation", [
     "ℹ️ About"])
 
 st.sidebar.markdown("---")
-st.sidebar.info("Developed by Social Media Group · 2025")
+st.sidebar.info("Bluesky Disinfo Analyzer — a project from the Bellingcat & CLIP Hackathon at Universidad de los Andes (March 2025).
+
+Investigating hate and disinformation on Bluesky using public data from Brazil.
+
+Source: github.com/reichaves/bluesky_analytics")
 
 # ----------- Load external modules -----------
 def load_flag_checker():
