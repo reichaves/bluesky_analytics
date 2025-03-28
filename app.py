@@ -36,6 +36,8 @@ st.sidebar.info("""Bluesky Disinfo Analyzer — a project from the Bellingcat & 
 
 Investigating hate and disinformation on Bluesky using public data from Brazil.
 
+But it can be adapted to other countries, contexts and research - and the analysis methodology can also be used for other social networks
+
 🔗 GitHub: https://github.com/reichaves/bluesky_analytics""")
 
 # --------- Loaders ----------
