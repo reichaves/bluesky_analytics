@@ -27,11 +27,7 @@ Bluesky Disinfo Analyzer — a project from the Bellingcat & CLIP Hackathon at U
 Investigating hate and disinformation on Bluesky using public data from Brazil.
 
 🔗 GitHub: https://github.com/reichaves/bluesky_analytics
-""").
-
-Investigating hate and disinformation on Bluesky using public data from Brazil.
-
-Source: github.com/reichaves/bluesky_analytics")
+""")
 
 # ----------- Load external modules -----------
 def load_flag_checker():
