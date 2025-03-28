@@ -16,6 +16,8 @@ def handle_to_did(handle):
 def get_user_posts(handle):
     if "bsky.app/" in handle:
         handle = handle.strip("/").split("/")[-1]
+    if handle.startswith("@"):
+        handle = handle[1:]
     did = handle_to_did(handle = handle)
     all_posts = []
     cursor = None
