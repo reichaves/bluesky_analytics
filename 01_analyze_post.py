@@ -45,6 +45,13 @@ def get_all_likes_public(uri):
             break
     return all_likes
 
+def get_embed(url):
+    r = requests.get("https://embed.bsky.app/oembed", params = {"url": url})
+    if r.ok:
+        return r.json()["html"]
+    else:
+        raise ConnectionError
+
 # def extract(json_records, start_date=None, end_date=None):
 #     # with open("data/all_posts_with_hashtags.json") as file:
 #     #     json_records = json.load(file)
@@ -79,6 +86,7 @@ def get_all_likes_public(uri):
 def run(url, start_date=None, end_date=None):
     uri = url_to_uri(url=url)
     likes = get_all_likes_public(uri)
+    embed_html = get_embed(url=url)
 
     all_flags = []
     profiles = []
@@ -114,7 +122,7 @@ def run(url, start_date=None, end_date=None):
         freq = "min"
     group = df.groupby(pd.Grouper(freq = freq, key = "createdAt")).agg("count")
 
-    return Counter(all_flags), profiles, group
+    return Counter(all_flags), profiles, group, embed_html
 
 # Optional CLI usage for testing the script standalone
 def main():

@@ -114,13 +114,17 @@ elif menu == "🚩 Analyze Post":
     if st.button("Analyze post"):
         with st.spinner("Processing..."):
           mod = load_post_module()
-          flags, profiles, group = mod.run(url=url)
+          flags, profiles, group, embed_html = mod.run(url=url)
+
+        st.components.v1.html(embed_html, height=600)
+
         st.markdown("### Flags in names of accounts that liked post")
-        for flag, count in flags.most_common():
+        for flag, count in flags.most_common()[:10]:
             st.write(f"{flag}: {count}")
 
+        st.markdown("### Likes over time")
         st.line_chart(group)
-        st.dataframe(group)
+        # st.dataframe(group)
 
 
 # --------- Analyze one user ----------
