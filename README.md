@@ -32,7 +32,7 @@ Try it online:
 
 ## 🧠 Data sources
 
-- [Bluesky Public API](https://docs.bsky.app/docs/api)
+- [Bluesky Public API](https://docs.bsky.app/docs/category/http-reference)
 - All real-time analyses use dynamic API queries
 - Some older features use JSON files from prior crawls
 
