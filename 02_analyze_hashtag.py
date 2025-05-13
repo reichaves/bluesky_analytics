@@ -8,21 +8,22 @@ import requests
 # ----------------------------------------------------------------------------
 # Configuration
 # ----------------------------------------------------------------------------
-BASE_URL = "https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts"
-DATA_LIMIT = 2_000  # total posts to pull
-PAGE_SIZE = 80      # <100 seems to avoid some 403 responses
+PRIMARY_URL = "https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts"
+FALLBACK_URL = "https://search.bsky.social/search/posts"  # unofficial but public
+DATA_LIMIT = 2_000
+PAGE_SIZE = 60  # conservative to minimise 403
 HEADERS = {
-    "User-Agent": "BlueskyAnalytics/0.2",
+    "User-Agent": "BlueskyAnalytics/0.3",
     "Accept": "application/json",
 }
-TIMEOUT = 10  # seconds
-MAX_RETRIES = 4  # attempts per page when we hit 403/429
+TIMEOUT = 10
+MAX_RETRIES = 3  # per endpoint
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 # ----------------------------------------------------------------------------
-# API helpers
+# helpers
 # ----------------------------------------------------------------------------
 
 def _build_query(hashtag: str) -> str:
@@ -30,32 +31,38 @@ def _build_query(hashtag: str) -> str:
     return f"#{tag}"
 
 
-def _request_with_backoff(params: dict) -> dict:
-    """Internal helper that performs GET with exponential back‑off.
+def _query_endpoint(url: str, params: dict) -> requests.Response:
+    """single HTTP GET with basic error handling"""
+    return requests.get(url, params=params, headers=HEADERS, timeout=TIMEOUT)
 
-    Retries on 403 (often proxy‑rate‑limit) and 429 (explicit rate‑limit).
-    """
-    attempt = 0
-    backoff = 1
-    while attempt < MAX_RETRIES:
-        resp = requests.get(BASE_URL, params=params, headers=HEADERS, timeout=TIMEOUT)
-        if resp.status_code in (403, 429):
-            # treat both as temporary throttle from the AppView proxy
-            wait = int(resp.headers.get("Retry-After", backoff))
-            logger.warning("%s returned – sleeping %s s (attempt %s)", resp.status_code, wait, attempt + 1)
-            time.sleep(wait)
-            backoff = min(backoff * 2, 60)
-            attempt += 1
-            continue
-        resp.raise_for_status()
-        return resp.json()
-    # if we exhausted retries
-    resp.raise_for_status()  # will raise HTTPError with last response
+
+def _fetch_page(params: dict) -> dict:
+    """Try primary endpoint; fall back to search.bsky.social if repeated 403/429."""
+
+    for base in (PRIMARY_URL, FALLBACK_URL):
+        attempt, backoff = 0, 1
+        while attempt < MAX_RETRIES:
+            r = _query_endpoint(base, params)
+            if r.status_code in (403, 429):
+                wait = int(r.headers.get("Retry-After", backoff))
+                logger.warning("%s on %s – sleep %s s (attempt %s)", r.status_code, base, wait, attempt + 1)
+                time.sleep(wait)
+                backoff = min(backoff * 2, 60)
+                attempt += 1
+                continue
+            if r.ok:
+                return r.json()
+            # any other HTTP error → break to switch endpoint or raise later
+            logger.debug("HTTP %s from %s", r.status_code, base)
+            break  # try next base or raise
+        # exhausted retries for this base → try next base
+    # if we reach here, both endpoints failed
+    r.raise_for_status()
 
 
 def search_hashtags(hashtag: str, limit: int = DATA_LIMIT) -> List[Dict]:
     if not hashtag:
-        raise ValueError("hashtag must be non‑empty")
+        raise ValueError("hashtag is required")
 
     posts: List[Dict] = []
     cursor = None
@@ -69,18 +76,18 @@ def search_hashtags(hashtag: str, limit: int = DATA_LIMIT) -> List[Dict]:
         if cursor:
             params["cursor"] = cursor
 
-        data = _request_with_backoff(params)
+        data = _fetch_page(params)
         posts.extend(data.get("posts", []))
-        cursor = data.get("cursor")
+        cursor = data.get("cursor") or data.get("nextPageCursor")  # fallback API uses nextPageCursor
         if not cursor:
             break
         remaining = limit - len(posts)
 
-    logger.info("fetched %d posts for %s", len(posts), hashtag)
+    logger.info("%d posts collected for %s", len(posts), hashtag)
     return posts[:limit]
 
 # ----------------------------------------------------------------------------
-# Feature extraction
+# extraction
 # ----------------------------------------------------------------------------
 
 def extract(
@@ -89,21 +96,22 @@ def extract(
     max_count: int | None = None,
     top_n: int | None = None,
 ) -> Tuple[Dict[str, int], List[Tuple[str, str]]]:
-    json_records = search_hashtags(hashtag)
-    hashtags: List[str] = []
+    try:
+        json_records = search_hashtags(hashtag)
+    except requests.HTTPError as err:
+        # propagate a clean error message to Streamlit caller
+        raise PermissionError(f"public Bluesky search blocked this term ({err.response.status_code}).") from err
 
+    hashtags: List[str] = []
     for post in json_records:
-        facets = post.get("record", {}).get("facets", [])
-        for facet in facets:
+        for facet in post.get("record", {}).get("facets", []):
             tag = facet.get("features", [{}])[0].get("tag")
             if tag:
                 hashtags.append(tag.lower())
 
     counter: Counter[str] = Counter(hashtags)
     filtered = {
-        tag: cnt
-        for tag, cnt in counter.items()
-        if cnt >= min_count and (max_count is None or cnt <= max_count)
+        t: c for t, c in counter.items() if c >= min_count and (max_count is None or c <= max_count)
     }
     sorted_filtered = dict(sorted(filtered.items(), key=lambda kv: kv[1], reverse=True))
     if top_n is not None:
@@ -117,7 +125,7 @@ def extract(
 
 # ----------------------------------------------------------------------------
 if __name__ == "__main__":
-    import pprint, sys, logging as lg
-    lg.basicConfig(level=lg.INFO)
-    hashtag = sys.argv[1] if len(sys.argv) > 1 else "#bluesky"
-    pprint.pp(extract(hashtag))
+    import pprint, sys
+    logging.basicConfig(level=logging.INFO)
+    tag = sys.argv[1] if len(sys.argv) > 1 else "#bluesky"
+    pprint.pp(extract(tag))
