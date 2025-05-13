@@ -4,6 +4,7 @@ from collections import Counter
 from typing import List, Dict, Tuple
 
 import requests
+from urllib.parse import quote_plus
 
 # ----------------------------------------------------------------------------
 # Configuration
@@ -11,8 +12,9 @@ import requests
 BASE_URL = "https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts"
 DATA_LIMIT = 2_000  # maximum number of posts to retrieve per query
 PAGE_SIZE = 100     # API maximum is 100
+# use a plain‑ascii User‑Agent to avoid UnicodeEncodeError inside http.client
 HEADERS = {
-    "User-Agent": "BlueskyAnalytics/0.2 (+https://github.com/your‑org/bluesky‑analytics)"
+    "User-Agent": "BlueskyAnalytics/0.2"
 }
 TIMEOUT = 10  # seconds for HTTP requests
 
@@ -24,32 +26,28 @@ logger.setLevel(logging.INFO)
 # ----------------------------------------------------------------------------
 
 def _build_query(hashtag: str) -> str:
-    """Return a URL‑encoded query string for the hashtag search."""
+    """Return a URL‑encoded query parameter for the hashtag search."""
     tag = hashtag.lstrip("#")  # remove leading # if present
-    return f"%23{tag}"
+    return f"#{tag}"  # let requests handle percent‑encoding
 
 
 def search_hashtags(hashtag: str, limit: int = DATA_LIMIT) -> List[Dict]:
     """Fetch *limit* Bluesky posts containing *hashtag*.
 
-    The function paginates through the public Bluesky API. It respects HTTP 429
-    (rate‑limit) responses by waiting for the server‑specified *Retry‑After*
-    value (or 1 second if missing) before retrying the same request.
+    Handles pagination and 429 rate‑limits with exponential back‑off.
     """
 
     if not hashtag:
         raise ValueError("hashtag must be a non‑empty string")
 
-    query = _build_query(hashtag)
     cursor = None
     posts: List[Dict] = []
-
     remaining = max(0, limit)
-    backoff = 1  # exponential back‑off base in seconds
+    backoff = 1  # seconds
 
     while remaining > 0:
         params = {
-            "q": query,
+            "q": _build_query(hashtag),
             "limit": min(PAGE_SIZE, remaining),
         }
         if cursor:
@@ -66,23 +64,20 @@ def search_hashtags(hashtag: str, limit: int = DATA_LIMIT) -> List[Dict]:
             logger.error("network error when calling Bluesky API", exc_info=exc)
             raise
 
-        # handle rate limiting ------------------------------------------------
         if resp.status_code == 429:
             retry_after = int(resp.headers.get("Retry-After", backoff))
-            logger.warning("hit rate limit – sleeping %s s", retry_after)
+            logger.warning("rate‑limited – sleeping %s s", retry_after)
             time.sleep(retry_after)
-            backoff = min(backoff * 2, 60)  # cap exponential back‑off at 60 s
-            continue  # retry same request
+            backoff = min(backoff * 2, 60)
+            continue
 
-        # raise for other HTTP errors ----------------------------------------
         resp.raise_for_status()
 
         data = resp.json()
         posts.extend(data.get("posts", []))
-
         cursor = data.get("cursor")
         if not cursor:
-            break  # no more pages
+            break
 
         remaining = limit - len(posts)
 
@@ -99,26 +94,7 @@ def extract(
     max_count: int | None = None,
     top_n: int | None = None,
 ) -> Tuple[Dict[str, int], List[Tuple[str, str]]]:
-    """Return hashtag co‑occurrence frequencies and the most active users.
-
-    Parameters
-    ----------
-    hashtag : str
-        The hashtag to search for.
-    min_count : int, optional
-        Minimum frequency for a hashtag to be kept in the result.
-    max_count : int | None, optional
-        Maximum frequency; pass *None* for no upper bound.
-    top_n : int | None, optional
-        If provided, only the *top_n* most frequent hashtags are returned.
-
-    Returns
-    -------
-    counts : dict[str, int]
-        Dictionary of related hashtags → frequency, sorted descending.
-    top_users : list[tuple[str, str]]
-        List of (handle, displayName) tuples for the top 10 posters.
-    """
+    """Return hashtag co‑occurrence frequencies and the most active users."""
 
     json_records = search_hashtags(hashtag)
 
@@ -136,7 +112,6 @@ def extract(
             logger.debug("error reading post: %s", err, exc_info=err)
             logger.debug(post)
 
-    # count occurrences ------------------------------------------------------
     counter: Counter[str] = Counter(hashtags)
     filtered = {
         tag: cnt
@@ -160,10 +135,5 @@ def extract(
 # ----------------------------------------------------------------------------
 if __name__ == "__main__":
     import pprint
-
     logging.basicConfig(level=logging.INFO)
     pprint.pp(extract("#bluesky"))
-
-
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
